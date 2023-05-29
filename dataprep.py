@@ -57,3 +57,14 @@ def generic_list_transform(in_data, in_index, var_name, column_name=None, year_n
         done += 1
     return out
 
+def dataprep():
+    path_all = "datasets_input/"
+    path_dem = path_all + "dur_dem.csv"
+    path_FH = path_all + "FH_data.csv"
+    path_elec = path_all + "GlobalElections_Election_results.csv"
+
+    raw_dem = pd.read_csv(path_dem).loc[:, ["country", "year", "polity2"]].rename(columns={"polity2": "Democracy"}).rename(str.capitalize, axis="columns")
+    raw_FH = pd.read_csv(path_FH, header=[0, 1], index_col=0, encoding="cp1252")
+    raw_elec = pd.read_csv(path_elec)
+
+    print(raw_elec)

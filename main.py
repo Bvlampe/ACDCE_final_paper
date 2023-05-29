@@ -1,7 +1,7 @@
-
+import dataprep
 
 def main():
-    print()
+    dataprep.dataprep()
 
 
 if __name__ == '__main__':
