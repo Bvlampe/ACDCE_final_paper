@@ -232,6 +232,19 @@ def calc_elec_frag(in_elecdata, in_index):
     return out_data
 
 
+def calc_eligible(in_turnout, in_votes, in_pop, in_index):
+    out_data = pd.DataFrame(index=in_index, columns=["Eligible population"])
+    for (ctry, year), row in in_turnout.iterrows():
+        if pd.isna(row.loc["Turnout"]):
+            continue
+        if year not in in_pop.index.get_level_values(1):
+            continue
+        eligible_abs = in_votes.loc[(ctry, year), "Votes"] / (row.loc["Turnout"] / 100)
+        eligible_rel = eligible_abs / in_pop.loc[(ctry, year), "Population"]
+        out_data.loc[(ctry, year), "Eligible population"] = eligible_rel
+    return out_data
+
+
 def dataprep(step="merge"):
     path_all = "datasets_input/"
     path_dem = path_all + "dur_dem.csv"
@@ -244,6 +257,7 @@ def dataprep(step="merge"):
     raw_FH = pd.read_csv(path_FH, header=[0, 1], index_col=0, encoding="cp1252")
     raw_elec = pd.read_csv(path_elec).rename(columns={"cnty": "Country", "year": "Year"})
     raw_turnout = pd.read_csv(path_turnout)
+    raw_votes = pd.read_csv(path_turnout, thousands=',')
     raw_pop = pd.read_csv(path_pop).rename(columns={"Country Name": "Country"})
 
     main_index_ctry = raw_dem.loc[:, "Country"].unique()
@@ -270,6 +284,7 @@ def dataprep(step="merge"):
         rename_countries(raw_elec, concordance_table)
         rename_countries(raw_FH, concordance_table, in_index=True)
         rename_countries(raw_turnout, concordance_table)
+        rename_countries(raw_votes, concordance_table)
         rename_countries(raw_pop, concordance_table)
 
         main_data = generic_list_transform(raw_dem, main_index, "Democracy")
@@ -277,6 +292,16 @@ def dataprep(step="merge"):
         slice_FH = format_FH(raw_FH, main_index)
         slice_turnout = generic_list_transform(raw_turnout, main_index, "Turnout", column_name="Voter Turnout")
         slice_turnout.loc[:, "Turnout"] = slice_turnout.loc[:, "Turnout"].str.rstrip(to_strip='%').astype(float)
-        slice_votes = generic_list_transform(raw_turnout, main_index, "Votes", column_name="Total vote")
+        slice_votes = generic_list_transform(raw_votes, main_index, "Votes", column_name="Total vote")
+        slice_votes.loc[:, "Votes"] = slice_votes.loc[:, "Votes"].astype(float)
         slice_pop = generic_table_transform(raw_pop, main_index, "Population")
-        print(slice_turnout.dropna())
+        slice_eligible = calc_eligible(slice_turnout, slice_votes, slice_pop, main_index)
+
+        print(slice_eligible.dropna())
+
+        for dset in [slice_elec, slice_FH, slice_eligible]:
+            main_data = main_data.merge(dset, left_index=True, right_index=True)
+        if query_yn():
+            main_data.to_csv("merged_data.csv")
+        print(main_data)
+
