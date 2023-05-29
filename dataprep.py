@@ -289,7 +289,7 @@ def dataprep(step="merge"):
 
         main_data = generic_list_transform(raw_dem, main_index, "Democracy")
         slice_elec = calc_elec_frag(raw_elec, main_index)
-        slice_FH = format_FH(raw_FH, main_index)
+        slice_FH = format_FH(raw_FH, main_index).drop(columns="FH_pol")
         slice_turnout = generic_list_transform(raw_turnout, main_index, "Turnout", column_name="Voter Turnout")
         slice_turnout.loc[:, "Turnout"] = slice_turnout.loc[:, "Turnout"].str.rstrip(to_strip='%').astype(float)
         slice_votes = generic_list_transform(raw_votes, main_index, "Votes", column_name="Total vote")
@@ -303,5 +303,4 @@ def dataprep(step="merge"):
             main_data = main_data.merge(dset, left_index=True, right_index=True)
         if query_yn():
             main_data.to_csv("merged_data.csv")
-        print(main_data)
 
