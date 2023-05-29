@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay, classification_report
@@ -29,11 +27,13 @@ def models():
 
     for col in ["Political Contestation", "Eligible population"]:
         main_data[col] = main_data.groupby(level=0)[col].apply(
-            lambda group: group.fillna(method="ffill", limit=10))
+            lambda group: group.fillna(method="ffill", limit=10)).droplevel(0)
 
+    print("main_data shape before dropping:", main_data.shape, end='\n')
     main_data.dropna(inplace=True)
+    print("main_data shape after dropping:", main_data.shape, end='\n')
 
-    main_data["Democracy decrease"] = np.where(main_data["Democracy change"] < -1, 1, 0)
+    main_data["Democracy decrease"] = np.where(main_data["Democracy change"] < 0, True, False)
     main_data.drop(["Democracy change"], axis=1, inplace=True)
 
     main_data['Year'] = main_data.index.get_level_values(1)
@@ -45,7 +45,8 @@ def models():
     model_gbm = GradientBoostingClassifier()
 
     indep_vars = list(main_data.columns.values)
-    indep_vars.remove("Democracy decrease")
+    DV = "Democracy change" if "Democracy change" in indep_vars else "Democracy decrease"
+    indep_vars.remove(DV)
     log = pd.DataFrame(index=indep_vars)
 
     i = 1
@@ -60,9 +61,9 @@ def models():
         x_train.columns = x_train.columns.tolist()
         x_test.columns = x_test.columns.tolist()
 
-        y_train, y_test = x_train["Democracy decrease"], x_test["Democracy decrease"]
-        x_train = x_train.drop(["Democracy decrease", "Year"], axis=1)
-        x_test = x_test.drop(["Democracy decrease", "Year"], axis=1)
+        y_train, y_test = x_train[DV], x_test[DV]
+        x_train = x_train.drop([DV, "Year"], axis=1)
+        x_test = x_test.drop([DV, "Year"], axis=1)
 
         model_logreg.fit(x_train, y_train)
         y_pred = model_logreg.predict(x_test)
@@ -73,11 +74,13 @@ def models():
         print("Accuracy:", accuracy_score(y_test, y_pred))
         print("ROC-AUC-score: ", roc_auc_score(y_test, model_logreg.predict_proba(x_test)[:, 1]))
         print()
-        # log.loc[:len(model_logreg.feature_importances_),f"LR Fold {i}"] = model_logreg.feature_importances_
+        # log.loc[indep_vars[0]:indep_vars[-1], f"LR Fold {i}"] = model_logreg.feature_importances_
         log.loc["Accuracy", f"LR Fold {i}"] = accuracy_score(y_test, y_pred)
         log.loc["Precision", f"LR Fold {i}"] = precision_score(y_test, y_pred)
         log.loc["Recall", f"LR Fold {i}"] = recall_score(y_test, y_pred)
         log.loc["ROC-AUC", f"LR Fold {i}"] = roc_auc_score(y_test, model_logreg.predict_proba(x_test)[:, 1])
+        log.loc["Train set size", f"LR Fold {i}"] = x_train.shape[0]
+        log.loc["Test set size", f"LR Fold {i}"] = x_test.shape[0]
 
         model_rf.fit(x_train, y_train)
         y_pred = model_rf.predict(x_test)
@@ -86,11 +89,14 @@ def models():
         print("Accuracy:", accuracy_score(y_test, y_pred))
         print("ROC-AUC-score: ", roc_auc_score(y_test, model_rf.predict_proba(x_test)[:, 1]))
         print()
-        log.loc[:len(model_rf.feature_importances_), f"RF Fold {i}"] = model_rf.feature_importances_
+        # log[f"RF Fold {i}"].iloc[:len(model_rf.feature_importances_)] = model_rf.feature_importances_
+        log.loc[indep_vars[0]:indep_vars[-2], f"RF Fold {i}"] = model_rf.feature_importances_
         log.loc["Accuracy", f"RF Fold {i}"] = accuracy_score(y_test, y_pred)
         log.loc["Precision", f"RF Fold {i}"] = precision_score(y_test, y_pred)
         log.loc["Recall", f"RF Fold {i}"] = recall_score(y_test, y_pred)
         log.loc["ROC-AUC", f"RF Fold {i}"] = roc_auc_score(y_test, model_rf.predict_proba(x_test)[:, 1])
+        log.loc["Train set size", f"RF Fold {i}"] = x_train.shape[0]
+        log.loc["Test set size", f"RF Fold {i}"] = x_test.shape[0]
 
         model_gbm.fit(x_train, y_train)
         y_pred = model_gbm.predict(x_test)
@@ -104,11 +110,13 @@ def models():
         for feature, v in zip(x_train.columns, model_gbm.feature_importances_):
             print(f"Feature: {feature}, Score: %.5f" % (v))
 
-        log.loc[:len(model_gbm.feature_importances_), f"GBM Fold {i}"] = model_gbm.feature_importances_
+        log.loc[indep_vars[0]:indep_vars[-2], f"GBM Fold {i}"] = model_gbm.feature_importances_
         log.loc["Accuracy", f"GBM Fold {i}"] = accuracy_score(y_test, y_pred)
         log.loc["Precision", f"GBM Fold {i}"] = precision_score(y_test, y_pred)
         log.loc["Recall", f"GBM Fold {i}"] = recall_score(y_test, y_pred)
         log.loc["ROC-AUC", f"GBM Fold {i}"] = roc_auc_score(y_test, model_gbm.predict_proba(x_test)[:, 1])
+        log.loc["Train set size", f"GBM Fold {i}"] = x_train.shape[0]
+        log.loc["Test set size", f"GBM Fold {i}"] = x_test.shape[0]
         print("--------------------------------------------------------")
         i += 1
     print("Log file:\n", log)
