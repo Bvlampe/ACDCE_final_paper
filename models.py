@@ -81,6 +81,8 @@ def models():
         log.loc["ROC-AUC", f"LR Fold {i}"] = roc_auc_score(y_test, model_logreg.predict_proba(x_test)[:, 1])
         log.loc["Train set size", f"LR Fold {i}"] = x_train.shape[0]
         log.loc["Test set size", f"LR Fold {i}"] = x_test.shape[0]
+        log.loc["Train set decline share", f"LR Fold {i}"] = str(y_train.value_counts(normalize=True))
+        log.loc["Test set decline share", f"LR Fold {i}"] = str(y_test.value_counts(normalize=True))
 
         model_rf.fit(x_train, y_train)
         y_pred = model_rf.predict(x_test)
@@ -97,6 +99,8 @@ def models():
         log.loc["ROC-AUC", f"RF Fold {i}"] = roc_auc_score(y_test, model_rf.predict_proba(x_test)[:, 1])
         log.loc["Train set size", f"RF Fold {i}"] = x_train.shape[0]
         log.loc["Test set size", f"RF Fold {i}"] = x_test.shape[0]
+        log.loc["Train set decline share", f"RF Fold {i}"] = str(y_train.value_counts(normalize=True))
+        log.loc["Test set decline share", f"RF Fold {i}"] = str(y_test.value_counts(normalize=True))
 
         model_gbm.fit(x_train, y_train)
         y_pred = model_gbm.predict(x_test)
@@ -117,6 +121,8 @@ def models():
         log.loc["ROC-AUC", f"GBM Fold {i}"] = roc_auc_score(y_test, model_gbm.predict_proba(x_test)[:, 1])
         log.loc["Train set size", f"GBM Fold {i}"] = x_train.shape[0]
         log.loc["Test set size", f"GBM Fold {i}"] = x_test.shape[0]
+        log.loc["Train set decline share", f"GBM Fold {i}"] = str(y_train.value_counts(normalize=True))
+        log.loc["Test set decline share", f"GBM Fold {i}"] = str(y_test.value_counts(normalize=True))
         print("--------------------------------------------------------")
         i += 1
     print("Log file:\n", log)
