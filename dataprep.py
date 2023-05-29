@@ -213,8 +213,9 @@ def rename_countries(io_data, in_dict, ctry_name="Country", in_index=False, in_h
             io_data.dropna(subset=ctry_name, inplace=True)
 
 
-def calc_elec_frag(in_elecdata, in_index)
+def calc_elec_frag(in_elecdata, in_index):
     out_data = pd.DataFrame(index=in_index, columns=["Political Contestation"])
+    in_elecdata.loc[:, "Year"] = in_elecdata.loc[:, "Year"].astype(int)
     column_list = ['p' + str(num + 1) + 'v' for num in range(715)]
     for _, row in in_elecdata.iterrows():
         found_any = False
@@ -222,11 +223,12 @@ def calc_elec_frag(in_elecdata, in_index)
         for col in column_list:
             if not np.isnan(row.loc[col]):
                 found_any = True
-                frag -= (row.loc[col]/100)**2
+                vote_share = row.loc[col] / row.loc["ElectionTotalVotes"]
+                frag -= vote_share ** 2
         ctry = row.loc["Country"]
         year = row.loc["Year"]
         if found_any:
-            out_data.loc[(ctry, year), "Political fragmentation"] = frag
+            out_data.loc[(ctry, year), "Political Contestation"] = frag
     return out_data
 
 
@@ -276,4 +278,4 @@ def dataprep(step="merge"):
         slice_turnout = generic_list_transform(raw_turnout, main_index, "Turnout", column_name="Voter Turnout")
         slice_votes = generic_list_transform(raw_turnout, main_index, "Votes", column_name="Total vote")
         slice_pop = generic_table_transform(raw_pop, main_index, "Population")
-        print(slice_votes)
+        print(slice_elec.dropna())
