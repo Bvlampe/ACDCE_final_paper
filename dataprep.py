@@ -213,6 +213,23 @@ def rename_countries(io_data, in_dict, ctry_name="Country", in_index=False, in_h
             io_data.dropna(subset=ctry_name, inplace=True)
 
 
+def calc_elec_frag(in_elecdata, in_index)
+    out_data = pd.DataFrame(index=in_index, columns=["Political Contestation"])
+    column_list = ['p' + str(num + 1) + 'v' for num in range(715)]
+    for _, row in in_elecdata.iterrows():
+        found_any = False
+        frag = 1
+        for col in column_list:
+            if not np.isnan(row.loc[col]):
+                found_any = True
+                frag -= (row.loc[col]/100)**2
+        ctry = row.loc["Country"]
+        year = row.loc["Year"]
+        if found_any:
+            out_data.loc[(ctry, year), "Political fragmentation"] = frag
+    return out_data
+
+
 def dataprep(step="merge"):
     path_all = "datasets_input/"
     path_dem = path_all + "dur_dem.csv"
@@ -223,7 +240,7 @@ def dataprep(step="merge"):
 
     raw_dem = pd.read_csv(path_dem).loc[:, ["country", "year", "polity2"]].rename(columns={"polity2": "Democracy"}).rename(str.capitalize, axis="columns")
     raw_FH = pd.read_csv(path_FH, header=[0, 1], index_col=0, encoding="cp1252")
-    raw_elec = pd.read_csv(path_elec).rename(columns={"cnty": "Country"})
+    raw_elec = pd.read_csv(path_elec).rename(columns={"cnty": "Country", "year": "Year"})
     raw_turnout = pd.read_csv(path_turnout)
     raw_pop = pd.read_csv(path_pop).rename(columns={"Country Name": "Country"})
 
@@ -254,7 +271,7 @@ def dataprep(step="merge"):
         rename_countries(raw_pop, concordance_table)
 
         main_data = generic_list_transform(raw_dem, main_index, "Democracy")
-        slice_elec = None
+        slice_elec = calc_elec_frag(raw_elec, main_index)
         slice_FH = format_FH(raw_FH, main_index)
         slice_turnout = generic_list_transform(raw_turnout, main_index, "Turnout", column_name="Voter Turnout")
         slice_votes = generic_list_transform(raw_turnout, main_index, "Votes", column_name="Total vote")
