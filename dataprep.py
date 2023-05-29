@@ -276,6 +276,7 @@ def dataprep(step="merge"):
         slice_elec = calc_elec_frag(raw_elec, main_index)
         slice_FH = format_FH(raw_FH, main_index)
         slice_turnout = generic_list_transform(raw_turnout, main_index, "Turnout", column_name="Voter Turnout")
+        slice_turnout.loc[:, "Turnout"] = slice_turnout.loc[:, "Turnout"].str.rstrip(to_strip='%').astype(float)
         slice_votes = generic_list_transform(raw_turnout, main_index, "Votes", column_name="Total vote")
         slice_pop = generic_table_transform(raw_pop, main_index, "Population")
-        print(slice_elec.dropna())
+        print(slice_turnout.dropna())
