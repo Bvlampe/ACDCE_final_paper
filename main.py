@@ -1,7 +1,7 @@
 import dataprep
 
 def main():
-    dataprep.dataprep()
+    dataprep.dataprep("merge")
 
 
 if __name__ == '__main__':
