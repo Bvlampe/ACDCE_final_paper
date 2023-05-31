@@ -46,8 +46,8 @@ def models():
         indep_vars.remove(DV)
         log = pd.DataFrame(index=indep_vars)
 
-        if query_yn("Write model data to file? y/n: "):
-            main_data.to_csv("model_data.csv")
+        # if query_yn("Write model data to file? y/n: "):
+        #     main_data.to_csv("model_data.csv")
 
         i = 1
         for train_index, test_index in tss.split(main_data['Year'].unique()):
