@@ -99,7 +99,7 @@ def models():
             log.loc["Precision", f"RF Fold {i}"] = precision_score(y_test, y_pred)
             log.loc["Recall", f"RF Fold {i}"] = recall_score(y_test, y_pred)
             log.loc["ROC-AUC", f"RF Fold {i}"] = roc_auc_score(y_test, model_rf.predict_proba(x_test)[:, 1])
-            precision, recall, thresholds = precision_recall_curve(y_test, model_logreg.predict_proba(x_test)[:, 1])
+            precision, recall, thresholds = precision_recall_curve(y_test, model_rf.predict_proba(x_test)[:, 1])
             log.loc["PR-AUC", f"RF Fold {i}"] = auc(recall, precision)
             log.loc["Train set size", f"RF Fold {i}"] = x_train.shape[0]
             log.loc["Test set size", f"RF Fold {i}"] = x_test.shape[0]
@@ -123,7 +123,7 @@ def models():
             log.loc["Precision", f"GBM Fold {i}"] = precision_score(y_test, y_pred)
             log.loc["Recall", f"GBM Fold {i}"] = recall_score(y_test, y_pred)
             log.loc["ROC-AUC", f"GBM Fold {i}"] = roc_auc_score(y_test, model_gbm.predict_proba(x_test)[:, 1])
-            precision, recall, thresholds = precision_recall_curve(y_test, model_logreg.predict_proba(x_test)[:, 1])
+            precision, recall, thresholds = precision_recall_curve(y_test, model_gbm.predict_proba(x_test)[:, 1])
             log.loc["PR-AUC", f"GBM Fold {i}"] = auc(recall, precision)
             log.loc["Train set size", f"GBM Fold {i}"] = x_train.shape[0]
             log.loc["Test set size", f"GBM Fold {i}"] = x_test.shape[0]
