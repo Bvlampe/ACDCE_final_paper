@@ -152,4 +152,4 @@ def models(cut_before_1990=False):
                 i += 1
             print("Log file:\n", log)
             if printyn:
-                log.to_csv(f"output_files/output_diff{'_1990s' if cut_before_1990 else None}_{democ_diff}_lag_{time_lag}.csv")
+                log.to_csv(f"output_files/output{'_1990' if cut_before_1990 else None}_diff_{democ_diff}_lag_{time_lag}.csv")
