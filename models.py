@@ -12,7 +12,7 @@ def query_yn(question):
         answer = input(question)
     return True if answer == "y" else False
 
-def models():
+def models(cut_before_1990=False):
     printyn = query_yn("Write model outputs of this run to log files? y/n: ")
     for democ_diff in [1, 2]:
         for time_lag in [5, 10]:
@@ -65,6 +65,10 @@ def models():
             #     main_data.to_csv("model_data.csv")
 
             i = 1
+
+            if cut_before_1990:
+                main_data.drop([year for year in range(1, 1990) if year in main_data.index.get_level_values(1)], level=1, axis=0, inplace=True)
+
             for train_index, test_index in tss.split(main_data['Year'].unique()):
                 print("Fold number", i, ":")
                 # Get the training and testing data for this split
@@ -148,4 +152,4 @@ def models():
                 i += 1
             print("Log file:\n", log)
             if printyn:
-                log.to_csv(f"output_files/output_diff_{democ_diff}_lag_{time_lag}.csv")
+                log.to_csv(f"output_files/output_diff{'_1990s' if cut_before_1990 else None}_{democ_diff}_lag_{time_lag}.csv")
